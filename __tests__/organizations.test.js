@@ -114,4 +114,22 @@ describe('organization routes', () => {
         });
       });
   });
+
+  it('deletes an organization by id via DELETE', () => {
+    return Organization.create({
+      title: 'Climate Justice Alliance',
+      description: 'Movement building to pivot towards a just transition away from unsustainable energy',
+      image: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png'
+    })
+      .then(organization => request(app).delete(`/api/v1/organizations/${organization._id}`))
+      .then(res => {
+        expect(res.body).toEqual({
+          _id: expect.anything(),
+          title: 'Climate Justice Alliance',
+          description: 'Movement building to pivot towards a just transition away from unsustainable energy',
+          image: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png',
+          __v: 0
+        });
+      });
+  });
 });
