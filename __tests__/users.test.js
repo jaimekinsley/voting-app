@@ -43,4 +43,55 @@ describe('user routes', () => {
         });
       });
   });
+
+  it('updates an user by id with PATCH', () => {
+    return User.create({
+      name: 'Jaime',
+      phone: '503-555-5974',
+      email: 'jaime@jaime.com',
+      communicationMedium: 'email',
+      imageUrl: 'http://myimage.com'
+    })
+      .then(user => {
+        return request(app)
+          .patch(`/api/v1/users/${user._id}`)
+          .send({ name: 'Lyn' });
+      })
+      .then(res => {
+        expect(res.body).toEqual({
+          _id: expect.anything(),
+          name: 'Lyn',
+          phone: '503-555-5974',
+          email: 'jaime@jaime.com',
+          communicationMedium: 'email',
+          imageUrl: 'http://myimage.com',
+          __v: 0
+        });
+      });
+  });
+
+  it('deletes an user by id with DELETE', () => {
+    return User.create({
+      name: 'Jaime',
+      phone: '503-555-5974',
+      email: 'jaime@jaime.com',
+      communicationMedium: 'email',
+      imageUrl: 'http://myimage.com'
+    })
+      .then(user => {
+        return request(app)
+          .delete(`/api/v1/users/${user._id}`);
+      })
+      .then(res => {
+        expect(res.body).toEqual({
+          _id: expect.anything(),
+          name: 'Jaime',
+          phone: '503-555-5974',
+          email: 'jaime@jaime.com',
+          communicationMedium: 'email',
+          imageUrl: 'http://myimage.com',
+          __v: 0
+        });
+      });
+  });
 });
