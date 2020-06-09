@@ -5,6 +5,7 @@ const connect = require('../lib/utils/connect');
 
 const request = require('supertest');
 const app = require('../lib/app');
+const Organization = require('../lib/models/Organization');
 
 describe('organization routes', () => {
   beforeAll(async() => {
@@ -37,6 +38,40 @@ describe('organization routes', () => {
           image: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png',
           __v: 0
         });
+      });
+  });
+
+  it('fails to create an organization via POST', () => {
+    return request(app)
+      .post('/api/v1/organizations')
+      .send({
+        title: '',
+        description: 'Movement building to pivot towards a just transition away from unsustainable energy',
+        image: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png'
+      })
+      .then(res => {
+        expect(res.body).toEqual({
+          message: 'Organization validation failed: title: Path `title` is required.',
+          status: 400
+        });
+      });
+  });
+
+  it('gets all organizations via GET', () => {
+    return Organization.create({
+      title: 'Climate Justice Alliance',
+      description: 'Movement building to pivot towards a just transition away from unsustainable energy',
+      image: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png'
+    })
+      .then(() => request(app).get('/api/v1/organizations'))
+      .then(res => {
+        expect(res.body).toEqual([{
+          _id: expect.anything(),
+          title: 'Climate Justice Alliance',
+          description: 'Movement building to pivot towards a just transition away from unsustainable energy',
+          image: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png',
+          __v: 0
+        }]);
       });
   });
 });
