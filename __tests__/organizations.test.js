@@ -74,4 +74,44 @@ describe('organization routes', () => {
         }]);
       });
   });
+
+  it('gets an organization by id via GET', () => {
+    return Organization.create({
+      title: 'Climate Justice Alliance',
+      description: 'Movement building to pivot towards a just transition away from unsustainable energy',
+      image: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png'
+    })
+      .then(organization => request(app).get(`/api/v1/organizations/${organization._id}`))
+      .then(res => {
+        expect(res.body).toEqual({
+          _id: expect.anything(),
+          title: 'Climate Justice Alliance',
+          description: 'Movement building to pivot towards a just transition away from unsustainable energy',
+          image: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png',
+          __v: 0
+        });
+      });
+  });
+
+  it('updates an organization by id via PATCH', () => {
+    return Organization.create({
+      title: 'Climate Justice Alliance',
+      description: 'Movement building to pivot towards a just transition away from unsustainable energy',
+      image: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png'
+    })
+      .then(organization => {
+        return request(app)
+          .patch(`/api/v1/organizations/${organization._id}`)
+          .send({ title: 'People Climate Movement' });
+      })
+      .then(res => {
+        expect(res.body).toEqual({
+          _id: expect.anything(),
+          title: 'People Climate Movement',
+          description: 'Movement building to pivot towards a just transition away from unsustainable energy',
+          image: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png',
+          __v: 0
+        });
+      });
+  });
 });
