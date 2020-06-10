@@ -88,6 +88,25 @@ describe('poll routes', () => {
           __v: 0
         }]);
       });
+  });
 
+  it('gets a poll by id with GET', () => {
+    return Poll.create({
+      organization: organization._id,
+      title: 'New president election',
+      description: 'At the end of the term, we need to select a new president',
+      options: ['Jaime', 'Carla', 'Sam', 'Louie']
+    })
+      .then(poll => request(app).get(`/api/v1/polls/${poll._id}`))
+      .then(res => {
+        expect(res.body).toEqual({
+          _id: expect.anything(),
+          organization: organization.id,
+          title: 'New president election',
+          description: 'At the end of the term, we need to select a new president',
+          options: ['Jaime', 'Carla', 'Sam', 'Louie'],
+          __v: 0
+        });
+      });
   });
 });
