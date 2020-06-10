@@ -6,6 +6,7 @@ const connect = require('../lib/utils/connect');
 const request = require('supertest');
 const app = require('../lib/app');
 const Organization = require('../lib/models/Organization');
+const Poll = require('../lib/models/Poll');
 
 describe('poll routes', () => {
   beforeAll(async() => {
@@ -50,5 +51,43 @@ describe('poll routes', () => {
           __v: 0
         });
       });
+  });
+
+  it('fails to create a poll with POST', () => {
+    return request(app)
+      .post('/api/v1/polls')
+      .send({
+        organization: organization._id,
+        title: '',
+        description: 'At the end of the term, we need to select a new president',
+        options: ['Jaime', 'Carla', 'Sam', 'Louie']
+      })
+      .then(res => {
+        expect(res.body).toEqual({
+          message: 'Poll validation failed: title: Path `title` is required.',
+          status: 400,
+        });
+      });
+  });
+
+  it('gets all polls with GET', () => {
+    return Poll.create({
+      organization: organization._id,
+      title: 'New president election',
+      description: 'At the end of the term, we need to select a new president',
+      options: ['Jaime', 'Carla', 'Sam', 'Louie']
+    })
+      .then(() => request(app).get('/api/v1/polls'))
+      .then(res => {
+        expect(res.body).toEqual([{
+          _id: expect.anything(),
+          organization: organization.id,
+          title: 'New president election',
+          description: 'At the end of the term, we need to select a new president',
+          options: ['Jaime', 'Carla', 'Sam', 'Louie'],
+          __v: 0
+        }]);
+      });
+
   });
 });
