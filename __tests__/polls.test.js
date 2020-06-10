@@ -109,4 +109,49 @@ describe('poll routes', () => {
         });
       });
   });
+
+  it('updates a poll by id with PATCH', () => {
+    return Poll.create({
+      organization: organization._id,
+      title: 'New president election',
+      description: 'At the end of the term, we need to select a new president',
+      options: ['Jaime', 'Carla', 'Sam', 'Louie']
+    })
+      .then(poll => {
+        return request(app)
+          .patch(`/api/v1/polls/${poll._id}`)
+          .send({ title: 'New Treasurer Election' });
+      })
+      .then(res => {
+        expect(res.body).toEqual({
+          _id: expect.anything(),
+          organization: organization.id,
+          title: 'New Treasurer Election',
+          description: 'At the end of the term, we need to select a new president',
+          options: ['Jaime', 'Carla', 'Sam', 'Louie'],
+          __v: 0
+        });
+      });
+  });
+
+  it('deletes a poll by id with DELETE', () => {
+    return Poll.create({
+      organization: organization._id,
+      title: 'New president election',
+      description: 'At the end of the term, we need to select a new president',
+      options: ['Jaime', 'Carla', 'Sam', 'Louie']
+    })
+      .then(poll => request(app).delete(`/api/v1/polls/${poll._id}`)
+        .then(res => {
+          expect(res.body).toEqual({
+            _id: expect.anything(),
+            organization: organization.id,
+            title: 'New president election',
+            description: 'At the end of the term, we need to select a new president',
+            options: ['Jaime', 'Carla', 'Sam', 'Louie'],
+            __v: 0
+          });
+        })
+      );
+  });
 });
