@@ -5,7 +5,7 @@ const connect = require('../lib/utils/connect');
 const Organization = require('../lib/models/Organization');
 const User = require('../lib/models/User');
 const Poll = require('../lib/models/Poll');
-// const Vote = require('../lib/models/Vote');
+const Vote = require('../lib/models/Vote');
 
 const request = require('supertest');
 const app = require('../lib/app');
@@ -55,17 +55,76 @@ describe('vote routes', () => {
     return mongod.stop();
   });
 
-
   it('creates a new vote with POST', async() => {
     return request(app)
       .post('/api/v1/votes')
-      .send({ organization, user, poll, option: 'Louie' })
+      .send({ organization, user, poll: poll, option: 'Louie' })
       .then(res => {
         expect(res.body).toEqual({
           _id: expect.anything(),
           poll: poll.id,
           user: user.id,
           option: 'Louie',
+          __v: 0
+        });
+      });
+  });
+
+  it('gets all votes on a poll with GET', async() => {
+    let votes = await Vote.create([
+      { organization, user, poll: poll, option: 'Louie' },
+      { organization, user, poll: poll, option: 'Louie' },
+      { organization, user, poll: poll, option: 'Sam' }
+    ]);
+    return request(app)
+      .get(`/api/v1/votes/polls?poll=${poll._id}`)
+      .then(res => {
+        for(let i = 0; i < res.body.length; i++){
+          expect(res.body[i]).toEqual({
+            _id: expect.anything(),
+            poll: poll.id,
+            user: user.id,
+            option: votes[i].option,
+            __v: 0
+          });
+        }
+      });
+  });
+
+  it('gets all votes by a user with GET', async() => {
+    let votes = await Vote.create([
+      { organization, user, poll: poll, option: 'Louie' },
+      { organization, user, poll: poll, option: 'Louie' },
+      { organization, user, poll: poll, option: 'Sam' }
+    ]);
+    return request(app)
+      .get(`/api/v1/votes?user=${user._id}`)
+      .then(res => {
+        for(let i = 0; i < res.body.length; i++){
+          expect(res.body[i]).toEqual({
+            _id: expect.anything(),
+            poll: poll.id,
+            user: user.id,
+            option: votes[i].option,
+            __v: 0
+          });
+        }
+      });
+  });
+
+  it('updates a vote option with PATCH', async() => {
+    const vote = await Vote.create(
+      { organization, user, poll: poll, option: 'Louie' }
+    );
+    return request(app)
+      .patch(`/api/v1/votes/${vote._id}`)
+      .send({ option: 'Sam' })
+      .then(res => {
+        expect(res.body).toEqual({
+          _id: expect.anything(),
+          poll: poll.id,
+          user: user.id,
+          option: 'Sam',
           __v: 0
         });
       });
