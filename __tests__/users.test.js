@@ -70,7 +70,7 @@ describe('user routes', () => {
       });
   });
 
-  it('deletes an user by id with DELETE', () => {
+  it('deletes an user (and their votes) by id with DELETE', () => {
     return User.create({
       name: 'Jaime',
       phone: '503-555-5974',

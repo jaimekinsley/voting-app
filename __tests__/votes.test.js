@@ -58,7 +58,7 @@ describe('vote routes', () => {
   it('creates a new vote with POST', async() => {
     return request(app)
       .post('/api/v1/votes')
-      .send({ organization, user, poll: poll, option: 'Louie' })
+      .send({ organization, user, poll, option: 'Louie' })
       .then(res => {
         expect(res.body).toEqual({
           _id: expect.anything(),
@@ -72,9 +72,9 @@ describe('vote routes', () => {
 
   it('gets all votes on a poll with GET', async() => {
     let votes = await Vote.create([
-      { organization, user, poll: poll, option: 'Louie' },
-      { organization, user, poll: poll, option: 'Louie' },
-      { organization, user, poll: poll, option: 'Sam' }
+      { organization, user, poll, option: 'Louie' },
+      { organization, user, poll, option: 'Louie' },
+      { organization, user, poll, option: 'Sam' }
     ]);
     return request(app)
       .get(`/api/v1/votes/polls?poll=${poll._id}`)
@@ -93,9 +93,9 @@ describe('vote routes', () => {
 
   it('gets all votes by a user with GET', async() => {
     let votes = await Vote.create([
-      { organization, user, poll: poll, option: 'Louie' },
-      { organization, user, poll: poll, option: 'Louie' },
-      { organization, user, poll: poll, option: 'Sam' }
+      { organization, user, poll, option: 'Louie' },
+      { organization, user, poll, option: 'Louie' },
+      { organization, user, poll, option: 'Sam' }
     ]);
     return request(app)
       .get(`/api/v1/votes?user=${user._id}`)
@@ -114,7 +114,7 @@ describe('vote routes', () => {
 
   it('updates a vote option with PATCH', async() => {
     const vote = await Vote.create(
-      { organization, user, poll: poll, option: 'Louie' }
+      { organization, user, poll, option: 'Louie' }
     );
     return request(app)
       .patch(`/api/v1/votes/${vote._id}`)
