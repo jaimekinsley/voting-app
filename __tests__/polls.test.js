@@ -81,11 +81,7 @@ describe('poll routes', () => {
       .then(res => {
         expect(res.body).toEqual([{
           _id: expect.anything(),
-          organization: organization.id,
-          title: 'New president election',
-          description: 'At the end of the term, we need to select a new president',
-          options: ['Jaime', 'Carla', 'Sam', 'Louie'],
-          __v: 0
+          title: 'New president election'
         }]);
       });
   });
@@ -101,7 +97,13 @@ describe('poll routes', () => {
       .then(res => {
         expect(res.body).toEqual({
           _id: expect.anything(),
-          organization: organization.id,
+          organization: {
+            _id: organization.id,
+            title: organization.title,
+            description: organization.description,
+            imageUrl: organization.imageUrl,
+            __v: 0
+          },
           title: 'New president election',
           description: 'At the end of the term, we need to select a new president',
           options: ['Jaime', 'Carla', 'Sam', 'Louie'],
