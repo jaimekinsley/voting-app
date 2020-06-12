@@ -193,16 +193,5 @@ describe('membership routes', () => {
       .then(votes => {
         expect(votes).toEqual([]);
       });
-
-    // return Membership.create({ organization, user })
-    //   .then(membership => request(app).delete(`/api/v1/memberships/${membership._id}`))
-    //   .then(res => {
-    //     expect(res.body).toEqual({
-    //       _id: expect.anything(),
-    //       organization: organization.id,
-    //       user: user.id,
-    //       __v: 0
-    //     });
-    //   });
   });
 });

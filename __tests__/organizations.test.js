@@ -6,6 +6,8 @@ const connect = require('../lib/utils/connect');
 const request = require('supertest');
 const app = require('../lib/app');
 const Organization = require('../lib/models/Organization');
+const User = require('../lib/models/User');
+const Membership = require('../lib/models/Membership');
 
 describe('organization routes', () => {
   beforeAll(async() => {
@@ -75,20 +77,53 @@ describe('organization routes', () => {
       });
   });
 
-  it('gets an organization by id via GET', () => {
-    return Organization.create({
+  it('gets an organization(and its members) by id via GET', async() => {
+    const organization = await Organization.create({
       title: 'Climate Justice Alliance',
       description: 'Movement building to pivot towards a just transition away from unsustainable energy',
       imageUrl: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png'
-    })
-      .then(organization => request(app).get(`/api/v1/organizations/${organization._id}`))
+    });
+
+    const users = await User.create([
+      {
+        name: 'Jaime',
+        phone: '503-555-5974',
+        email: 'jaime@jaime.com',
+        communicationMedium: 'email',
+        imageUrl: 'http://myimage.com'
+      },
+      { name: 'Sam',
+        phone: '913-555-5974',
+        email: 'sam@sam.com',
+        communicationMedium: 'email',
+        imageUrl: 'http://myimage.com'
+      }
+    ]);
+
+    const members = await Membership.create(users.map((user) => {
+      const membershipObject = { organization, user };
+      return membershipObject;
+    }));
+
+    return request(app)
+      .get(`/api/v1/organizations/${organization._id}`)
       .then(res => {
         expect(res.body).toEqual({
           _id: expect.anything(),
           title: 'Climate Justice Alliance',
           description: 'Movement building to pivot towards a just transition away from unsustainable energy',
           imageUrl: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png',
-          __v: 0
+          __v: 0,
+          memberships: [{
+            _id: members[0].id,
+            organization: members[0].organization.id,
+            user: members[0].user.id,
+          },
+          {
+            _id: members[1].id,
+            organization: members[1].organization.id,
+            user: members[1].user.id,
+          }]
         });
       });
   });
