@@ -150,7 +150,6 @@ describe('membership routes', () => {
   });
 
   it('deletes a membership (and votes made by the member) by id via DELETE', async() => {
-
     const organization = await Organization.create({
       title: 'Climate Justice Alliance',
       description: 'Movement building to pivot towards a just transition away from unsustainable energy',

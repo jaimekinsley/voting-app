@@ -9,7 +9,6 @@ const User = require('../lib/models/User');
 const Membership = require('../lib/models/Membership');
 const Organization = require('../lib/models/Organization');
 
-
 describe('user routes', () => {
   beforeAll(async() => {
     const uri = await mongod.getUri();
