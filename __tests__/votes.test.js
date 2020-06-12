@@ -29,7 +29,6 @@ describe('vote routes', () => {
     });
   });
 
-
   let user;
   beforeEach(async() => {
     user = await User.create({
@@ -122,6 +121,25 @@ describe('vote routes', () => {
       .then(res => {
         expect(res.body).toEqual({
           _id: expect.anything(),
+          poll: poll.id,
+          user: user.id,
+          option: 'Sam',
+          __v: 0
+        });
+      });
+  });
+
+  it('allows a user to vote only once on a poll with POST', async() => {
+    const vote = await Vote.create(
+      { organization, user, poll, option: 'Louie' }
+    );
+
+    return request(app)
+      .post('/api/v1/votes')
+      .send({ organization, user, poll, option: 'Sam' })
+      .then(res => {
+        expect(res.body).toEqual({
+          _id: vote.id,
           poll: poll.id,
           user: user.id,
           option: 'Sam',
