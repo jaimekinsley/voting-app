@@ -29,7 +29,6 @@ describe('vote routes', () => {
     });
   });
 
-
   let user;
   beforeEach(async() => {
     user = await User.create({
@@ -58,7 +57,7 @@ describe('vote routes', () => {
   it('creates a new vote with POST', async() => {
     return request(app)
       .post('/api/v1/votes')
-      .send({ organization, user, poll: poll, option: 'Louie' })
+      .send({ organization, user, poll, option: 'Louie' })
       .then(res => {
         expect(res.body).toEqual({
           _id: expect.anything(),
@@ -72,9 +71,9 @@ describe('vote routes', () => {
 
   it('gets all votes on a poll with GET', async() => {
     let votes = await Vote.create([
-      { organization, user, poll: poll, option: 'Louie' },
-      { organization, user, poll: poll, option: 'Louie' },
-      { organization, user, poll: poll, option: 'Sam' }
+      { organization, user, poll, option: 'Louie' },
+      { organization, user, poll, option: 'Louie' },
+      { organization, user, poll, option: 'Sam' }
     ]);
     return request(app)
       .get(`/api/v1/votes/polls?poll=${poll._id}`)
@@ -93,15 +92,15 @@ describe('vote routes', () => {
 
   it('gets all votes by a user with GET', async() => {
     let votes = await Vote.create([
-      { organization, user, poll: poll, option: 'Louie' },
-      { organization, user, poll: poll, option: 'Louie' },
-      { organization, user, poll: poll, option: 'Sam' }
+      { organization, user, poll, option: 'Louie' },
+      { organization, user, poll, option: 'Louie' },
+      { organization, user, poll, option: 'Sam' }
     ]);
     return request(app)
       .get(`/api/v1/votes?user=${user._id}`)
       .then(res => {
         for(let i = 0; i < res.body.length; i++){
-          expect(res.body[i]).toEqual({
+          expect(res.body).toContainEqual({
             _id: expect.anything(),
             poll: poll.id,
             user: user.id,
@@ -114,7 +113,7 @@ describe('vote routes', () => {
 
   it('updates a vote option with PATCH', async() => {
     const vote = await Vote.create(
-      { organization, user, poll: poll, option: 'Louie' }
+      { organization, user, poll, option: 'Louie' }
     );
     return request(app)
       .patch(`/api/v1/votes/${vote._id}`)
@@ -122,6 +121,25 @@ describe('vote routes', () => {
       .then(res => {
         expect(res.body).toEqual({
           _id: expect.anything(),
+          poll: poll.id,
+          user: user.id,
+          option: 'Sam',
+          __v: 0
+        });
+      });
+  });
+
+  it('allows a user to vote only once on a poll with POST', async() => {
+    const vote = await Vote.create(
+      { organization, user, poll, option: 'Louie' }
+    );
+
+    return request(app)
+      .post('/api/v1/votes')
+      .send({ organization, user, poll, option: 'Sam' })
+      .then(res => {
+        expect(res.body).toEqual({
+          _id: vote.id,
           poll: poll.id,
           user: user.id,
           option: 'Sam',

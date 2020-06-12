@@ -8,7 +8,8 @@ const app = require('../lib/app');
 const Organization = require('../lib/models/Organization');
 const User = require('../lib/models/User');
 const Membership = require('../lib/models/Membership');
-
+const Vote = require('../lib/models/Vote');
+const Poll = require('../lib/models/Poll');
 
 describe('membership routes', () => {
   beforeAll(async() => {
@@ -148,12 +149,20 @@ describe('membership routes', () => {
       });
   });
 
-  it('deletes a membership by id via DELETE', async() => {
+  it('deletes a membership (and votes made by the member) by id via DELETE', async() => {
     const organization = await Organization.create({
       title: 'Climate Justice Alliance',
       description: 'Movement building to pivot towards a just transition away from unsustainable energy',
       imageUrl: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png'
     });
+
+    const poll = await Poll.create({
+      organization: organization._id,
+      title: 'A new poll',
+      description: 'At the end of the term, we need to select a new president',
+      options: ['Jaime', 'Carla', 'Sam', 'Louie']
+    });
+
     const user = await User.create({
       name: 'Jaime',
       phone: '503-555-5974',
@@ -161,15 +170,27 @@ describe('membership routes', () => {
       communicationMedium: 'email',
       imageUrl: 'http://myimage.com'
     });
-    return Membership.create({ organization, user })
-      .then(membership => request(app).delete(`/api/v1/memberships/${membership._id}`))
+
+    const membership = await Membership.create({ organization, user });
+
+    await Vote.create([
+      { organization, user, poll, option: 'Louie' },
+      { organization, user, poll, option: 'Louie' }
+    ]);
+
+    return request(app)
+      .delete(`/api/v1/memberships/${membership._id}`)
       .then(res => {
         expect(res.body).toEqual({
-          _id: expect.anything(),
+          _id: membership.id,
           organization: organization.id,
           user: user.id,
           __v: 0
         });
+        return Vote.find({ user: user._id });
+      })
+      .then(votes => {
+        expect(votes).toEqual([]);
       });
   });
 });
