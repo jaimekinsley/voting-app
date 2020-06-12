@@ -100,7 +100,7 @@ describe('vote routes', () => {
       .get(`/api/v1/votes?user=${user._id}`)
       .then(res => {
         for(let i = 0; i < res.body.length; i++){
-          expect(res.body[i]).toEqual({
+          expect(res.body).toContainEqual({
             _id: expect.anything(),
             poll: poll.id,
             user: user.id,
