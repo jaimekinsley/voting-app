@@ -120,27 +120,35 @@ describe('user routes', () => {
       });
   });
 
-  it('deletes an user (and their votes) by id with DELETE', () => {
-    return User.create({
+  it('deletes an user (and their votes) by id with DELETE', async() => {
+    const user = await User.create({
       name: 'Jaime',
+      password: '12345',
       phone: '503-555-5974',
       email: 'jaime@jaime.com',
       communicationMedium: 'email',
       imageUrl: 'http://myimage.com'
-    })
-      .then(user => {
-        return request(app)
+    });
+
+    const agent = request.agent(app);
+
+    return agent
+      .post('/api/v1/auth/login')
+      .send({ email: 'jaime@jaime.com', password: '12345' })
+      .then(() => {
+
+        return agent
           .delete(`/api/v1/users/${user._id}`);
       })
       .then(res => {
         expect(res.body).toEqual({
-          _id: expect.anything(),
+          _id: user.id,
+          id: user.id,
           name: 'Jaime',
           phone: '503-555-5974',
           email: 'jaime@jaime.com',
           communicationMedium: 'email',
           imageUrl: 'http://myimage.com',
-          __v: 0
         });
       });
   });
