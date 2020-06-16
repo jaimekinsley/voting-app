@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const mongod = new MongoMemoryServer();
 const mongoose = require('mongoose');
@@ -33,6 +35,7 @@ describe('vote routes', () => {
   beforeEach(async() => {
     user = await User.create({
       name: 'Jaime',
+      password: '12345',
       phone: '503-555-5974',
       email: 'jaime@jaime.com',
       communicationMedium: 'email',
