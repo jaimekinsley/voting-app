@@ -60,7 +60,7 @@ describe('organization routes', () => {
   });
 
   it('fails to create an organization via POST', () => {
-    return request(app)
+    return agent
       .post('/api/v1/organizations')
       .send({
         title: '',
@@ -81,7 +81,7 @@ describe('organization routes', () => {
       description: 'Movement building to pivot towards a just transition away from unsustainable energy',
       imageUrl: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png'
     })
-      .then(() => request(app).get('/api/v1/organizations'))
+      .then(() => agent.get('/api/v1/organizations'))
       .then(res => {
         expect(res.body).toEqual([{
           _id: expect.anything(),
@@ -102,10 +102,10 @@ describe('organization routes', () => {
 
     const users = await User.create([
       {
-        name: 'Jaime',
-        password: '12345',
-        phone: '503-555-5974',
-        email: 'jaime@jaime.com',
+        name: 'Carla',
+        password: '0517',
+        phone: '503-913-5974',
+        email: 'carla@carla.com',
         communicationMedium: 'email',
         imageUrl: 'http://myimage.com'
       },
@@ -123,11 +123,9 @@ describe('organization routes', () => {
       return membershipObject;
     }));
 
-    const agent = request.agent(app);
-
     return agent
       .post('/api/v1/auth/login')
-      .send([{ email: 'jaime@jaime.com', password: '12345' }, { email: 'sam@sam.com', password: '6789' }])
+      .send([{ email: 'carla@carla.com', password: '0517' }, { email: 'sam@sam.com', password: '6789' }])
       .then(() => {
         return agent
           .get(`/api/v1/organizations/${organization._id}`)
@@ -161,7 +159,7 @@ describe('organization routes', () => {
       imageUrl: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png'
     })
       .then(organization => {
-        return request(app)
+        return agent
           .patch(`/api/v1/organizations/${organization._id}`)
           .send({ title: 'People Climate Movement' });
       })
@@ -197,7 +195,7 @@ describe('organization routes', () => {
     }
     ]);
 
-    return request(app)
+    return agent
       .delete(`/api/v1/organizations/${organization._id}`)
       .then(res => {
         expect(res.body).toEqual({
