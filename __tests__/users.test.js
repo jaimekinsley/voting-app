@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const mongod = new MongoMemoryServer();
 const mongoose = require('mongoose');
@@ -28,6 +30,7 @@ describe('user routes', () => {
     const user = await User.create(
       {
         name: 'Jaime',
+        password: '12345',
         phone: '503-555-5974',
         email: 'jaime@jaime.com',
         communicationMedium: 'email',
@@ -51,28 +54,35 @@ describe('user routes', () => {
       return membershipObject;
     }));
 
-    return request(app)
-      .get(`/api/v1/users/${user._id}`)
-      .then(res => {
-        expect(res.body).toEqual({
-          _id: expect.anything(),
-          name: 'Jaime',
-          phone: '503-555-5974',
-          email: 'jaime@jaime.com',
-          communicationMedium: 'email',
-          imageUrl: 'http://myimage.com',
-          __v: 0,
-          memberships: [{
-            _id: members[0].id,
-            organization: members[0].organization.id,
-            user: members[0].user.id
-          },
-          {
-            _id: members[1].id,
-            organization: members[1].organization.id,
-            user: members[1].user.id
-          }]
-        });
+    const agent = request.agent(app);
+
+    return agent
+      .post('/api/v1/auth/login')
+      .send({ email: 'jaime@jaime.com', password: '12345' })
+      .then(() => {
+        return agent
+          .get(`/api/v1/users/${user._id}`)
+          .then(res => {
+            expect(res.body).toEqual({
+              _id: user.id,
+              id: user.id,
+              name: 'Jaime',
+              phone: '503-555-5974',
+              email: 'jaime@jaime.com',
+              communicationMedium: 'email',
+              imageUrl: 'http://myimage.com',
+              memberships: [{
+                _id: members[0].id,
+                organization: members[0].organization.id,
+                user: members[0].user.id
+              },
+              {
+                _id: members[1].id,
+                organization: members[1].organization.id,
+                user: members[1].user.id
+              }]
+            });
+          });
       });
   });
 
