@@ -88,12 +88,14 @@ describe('organization routes', () => {
     const users = await User.create([
       {
         name: 'Jaime',
+        password: '12345',
         phone: '503-555-5974',
         email: 'jaime@jaime.com',
         communicationMedium: 'email',
         imageUrl: 'http://myimage.com'
       },
       { name: 'Sam',
+        password: '6789',
         phone: '913-555-5974',
         email: 'sam@sam.com',
         communicationMedium: 'email',
