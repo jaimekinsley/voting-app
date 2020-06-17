@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const mongod = new MongoMemoryServer();
 const mongoose = require('mongoose');
@@ -21,6 +23,20 @@ describe('membership routes', () => {
     return mongoose.connection.dropDatabase();
   });
 
+  const agent = request.agent(app);
+  let user;
+  beforeEach(() => {
+    return agent
+      .post('/api/v1/auth/signup')
+      .send({ name: 'Jaime',
+        password: '12345',
+        phone: '503-555-5974',
+        email: 'jaime@jaime.com',
+        communicationMedium: 'email',
+        imageUrl: 'http://myimage.com' })
+      .then(res => user = res.body);
+  });
+
   afterAll(async() => {
     await mongoose.connection.close();
     return mongod.stop();
@@ -32,15 +48,8 @@ describe('membership routes', () => {
       description: 'Movement building to pivot towards a just transition away from unsustainable energy',
       imageUrl: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png'
     });
-    const user = await User.create({
-      name: 'Jaime',
-      phone: '503-555-5974',
-      email: 'jaime@jaime.com',
-      communicationMedium: 'email',
-      imageUrl: 'http://myimage.com'
-    });
 
-    return request(app)
+    return agent
       .post('/api/v1/memberships')
       .send({ organization, user })
       .then(res => {
@@ -53,7 +62,7 @@ describe('membership routes', () => {
       });
   });
 
-  it('gets all users in an organization', async() => {
+  it('gets all members of an organization', async() => {
     const organization = await Organization.create({
       title: 'Climate Justice Alliance',
       description: 'Movement building to pivot towards a just transition away from unsustainable energy',
@@ -61,14 +70,16 @@ describe('membership routes', () => {
     });
 
     let users = await User.create([{
-      name: 'Jaime',
-      phone: '503-555-5974',
-      email: 'jaime@jaime.com',
+      name: 'Carla',
+      password: '44444',
+      phone: '913-555-5555',
+      email: 'carla@carla.com',
       communicationMedium: 'email',
       imageUrl: 'http://myimage.com'
     },
     {
       name: 'Sam',
+      password: '22222',
       phone: '913-555-5974',
       email: 'sam@sam.com',
       communicationMedium: 'email',
@@ -80,7 +91,7 @@ describe('membership routes', () => {
       return membershipObject;
     }));
 
-    return request(app)
+    return agent
       .get(`/api/v1/memberships?organization=${organization._id}`)
       .then(res => {
         for(let i = 0; i < res.body.length; i++){
@@ -93,6 +104,7 @@ describe('membership routes', () => {
             },
             user: {
               _id: users[i].id,
+              id: users[i].id,
               name: users[i].name,
               imageUrl: users[i].imageUrl
             },
@@ -103,14 +115,6 @@ describe('membership routes', () => {
   });
 
   it('gets all organizations an user is a member of', async() => {
-    const user = await User.create({
-      name: 'Jaime',
-      phone: '503-555-5974',
-      email: 'jaime@jaime.com',
-      communicationMedium: 'email',
-      imageUrl: 'http://myimage.com'
-    });
-
     let organizations = await Organization.create([{
       title: 'Climate Justice Alliance',
       description: 'Movement building to pivot towards a just transition away from unsustainable energy',
@@ -127,7 +131,7 @@ describe('membership routes', () => {
       return membershipObject;
     }));
 
-    return request(app)
+    return agent
       .get(`/api/v1/memberships?user=${user._id}`)
       .then(res => {
         for(let i = 0; i < res.body.length; i++){
@@ -140,6 +144,7 @@ describe('membership routes', () => {
             },
             user: {
               _id: user.id,
+              id: user.id,
               name: user.name,
               imageUrl: user.imageUrl
             },
@@ -163,14 +168,6 @@ describe('membership routes', () => {
       options: ['Jaime', 'Carla', 'Sam', 'Louie']
     });
 
-    const user = await User.create({
-      name: 'Jaime',
-      phone: '503-555-5974',
-      email: 'jaime@jaime.com',
-      communicationMedium: 'email',
-      imageUrl: 'http://myimage.com'
-    });
-
     const membership = await Membership.create({ organization, user });
 
     await Vote.create([
@@ -178,7 +175,7 @@ describe('membership routes', () => {
       { organization, user, poll, option: 'Louie' }
     ]);
 
-    return request(app)
+    return agent
       .delete(`/api/v1/memberships/${membership._id}`)
       .then(res => {
         expect(res.body).toEqual({
