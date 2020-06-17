@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const mongod = new MongoMemoryServer();
 const mongoose = require('mongoose');
@@ -18,6 +20,19 @@ describe('poll routes', () => {
     return mongoose.connection.dropDatabase();
   });
 
+  const agent = request.agent(app);
+
+  beforeEach(() => {
+    return agent
+      .post('/api/v1/auth/signup')
+      .send({ name: 'Jaime',
+        password: '12345',
+        phone: '503-555-5974',
+        email: 'jaime@jaime.com',
+        communicationMedium: 'email',
+        imageUrl: 'http://myimage.com' });
+  });
+
   let organization;
   beforeEach(async() => {
     organization = await Organization.create({
@@ -33,7 +48,7 @@ describe('poll routes', () => {
   });
 
   it('creates a poll with POST', () => {
-    return request(app)
+    return agent
       .post('/api/v1/polls')
       .send({
         organization: organization._id,
@@ -54,7 +69,7 @@ describe('poll routes', () => {
   });
 
   it('fails to create a poll with POST', () => {
-    return request(app)
+    return agent
       .post('/api/v1/polls')
       .send({
         organization: organization._id,
@@ -77,7 +92,7 @@ describe('poll routes', () => {
       description: 'At the end of the term, we need to select a new president',
       options: ['Jaime', 'Carla', 'Sam', 'Louie']
     })
-      .then(() => request(app).get('/api/v1/polls'))
+      .then(() => agent.get('/api/v1/polls'))
       .then(res => {
         expect(res.body).toEqual([{
           _id: expect.anything(),
@@ -93,7 +108,7 @@ describe('poll routes', () => {
       description: 'At the end of the term, we need to select a new president',
       options: ['Jaime', 'Carla', 'Sam', 'Louie']
     })
-      .then(poll => request(app).get(`/api/v1/polls/${poll._id}`))
+      .then(poll => agent.get(`/api/v1/polls/${poll._id}`))
       .then(res => {
         expect(res.body).toEqual({
           _id: expect.anything(),
@@ -120,7 +135,7 @@ describe('poll routes', () => {
       options: ['Jaime', 'Carla', 'Sam', 'Louie']
     })
       .then(poll => {
-        return request(app)
+        return agent
           .patch(`/api/v1/polls/${poll._id}`)
           .send({ title: 'New Treasurer Election' });
       })
@@ -143,7 +158,7 @@ describe('poll routes', () => {
       description: 'At the end of the term, we need to select a new president',
       options: ['Jaime', 'Carla', 'Sam', 'Louie']
     })
-      .then(poll => request(app).delete(`/api/v1/polls/${poll._id}`)
+      .then(poll => agent.delete(`/api/v1/polls/${poll._id}`)
         .then(res => {
           expect(res.body).toEqual({
             _id: expect.anything(),
