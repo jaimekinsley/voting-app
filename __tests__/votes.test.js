@@ -1,9 +1,10 @@
+require('dotenv').config();
+
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const mongod = new MongoMemoryServer();
 const mongoose = require('mongoose');
 const connect = require('../lib/utils/connect');
 const Organization = require('../lib/models/Organization');
-const User = require('../lib/models/User');
 const Poll = require('../lib/models/Poll');
 const Vote = require('../lib/models/Vote');
 
@@ -20,22 +21,26 @@ describe('vote routes', () => {
     return mongoose.connection.dropDatabase();
   });
 
+  const agent = request.agent(app);
+  let user;
+  beforeEach(() => {
+    return agent
+      .post('/api/v1/auth/signup')
+      .send({ name: 'Jaime',
+        password: '12345',
+        phone: '503-555-5974',
+        email: 'jaime@jaime.com',
+        communicationMedium: 'email',
+        imageUrl: 'http://myimage.com' })
+      .then(res => user = res.body);
+  });
+
   let organization;
   beforeEach(async() => {
     organization = await Organization.create({
       title: 'Climate Justice Alliance',
       description: 'Movement building to pivot towards a just transition away from unsustainable energy',
       imageUrl: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png'
-    });
-  });
-
-  let user;
-  beforeEach(async() => {
-    user = await User.create({
-      name: 'Jaime',
-      phone: '503-555-5974',
-      email: 'jaime@jaime.com',
-      communicationMedium: 'email',
     });
   });
 
@@ -55,7 +60,7 @@ describe('vote routes', () => {
   });
 
   it('creates a new vote with POST', async() => {
-    return request(app)
+    return agent
       .post('/api/v1/votes')
       .send({ organization, user, poll, option: 'Louie' })
       .then(res => {
@@ -75,7 +80,7 @@ describe('vote routes', () => {
       { organization, user, poll, option: 'Louie' },
       { organization, user, poll, option: 'Sam' }
     ]);
-    return request(app)
+    return agent
       .get(`/api/v1/votes/polls?poll=${poll._id}`)
       .then(res => {
         for(let i = 0; i < res.body.length; i++){
@@ -96,7 +101,7 @@ describe('vote routes', () => {
       { organization, user, poll, option: 'Louie' },
       { organization, user, poll, option: 'Sam' }
     ]);
-    return request(app)
+    return agent
       .get(`/api/v1/votes?user=${user._id}`)
       .then(res => {
         for(let i = 0; i < res.body.length; i++){
@@ -115,7 +120,7 @@ describe('vote routes', () => {
     const vote = await Vote.create(
       { organization, user, poll, option: 'Louie' }
     );
-    return request(app)
+    return agent
       .patch(`/api/v1/votes/${vote._id}`)
       .send({ option: 'Sam' })
       .then(res => {
@@ -134,7 +139,7 @@ describe('vote routes', () => {
       { organization, user, poll, option: 'Louie' }
     );
 
-    return request(app)
+    return agent
       .post('/api/v1/votes')
       .send({ organization, user, poll, option: 'Sam' })
       .then(res => {

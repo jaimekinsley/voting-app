@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const { MongoMemoryServer } = require('mongodb-memory-server');
 const mongod = new MongoMemoryServer();
 const mongoose = require('mongoose');
@@ -20,13 +22,26 @@ describe('organization routes', () => {
     return mongoose.connection.dropDatabase();
   });
 
+  const agent = request.agent(app);
+
+  beforeEach(() => {
+    return agent
+      .post('/api/v1/auth/signup')
+      .send({ name: 'Jaime',
+        password: '12345',
+        phone: '503-555-5974',
+        email: 'jaime@jaime.com',
+        communicationMedium: 'email',
+        imageUrl: 'http://myimage.com' });
+  });
+
   afterAll(async() => {
     await mongoose.connection.close();
     return mongod.stop();
   });
 
   it('creates an organization via POST', () => {
-    return request(app)
+    return agent
       .post('/api/v1/organizations')
       .send({
         title: 'Climate Justice Alliance',
@@ -45,7 +60,7 @@ describe('organization routes', () => {
   });
 
   it('fails to create an organization via POST', () => {
-    return request(app)
+    return agent
       .post('/api/v1/organizations')
       .send({
         title: '',
@@ -66,7 +81,7 @@ describe('organization routes', () => {
       description: 'Movement building to pivot towards a just transition away from unsustainable energy',
       imageUrl: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png'
     })
-      .then(() => request(app).get('/api/v1/organizations'))
+      .then(() => agent.get('/api/v1/organizations'))
       .then(res => {
         expect(res.body).toEqual([{
           _id: expect.anything(),
@@ -87,13 +102,15 @@ describe('organization routes', () => {
 
     const users = await User.create([
       {
-        name: 'Jaime',
-        phone: '503-555-5974',
-        email: 'jaime@jaime.com',
+        name: 'Carla',
+        password: '0517',
+        phone: '503-913-5974',
+        email: 'carla@carla.com',
         communicationMedium: 'email',
         imageUrl: 'http://myimage.com'
       },
       { name: 'Sam',
+        password: '6789',
         phone: '913-555-5974',
         email: 'sam@sam.com',
         communicationMedium: 'email',
@@ -106,27 +123,33 @@ describe('organization routes', () => {
       return membershipObject;
     }));
 
-    return request(app)
-      .get(`/api/v1/organizations/${organization._id}`)
-      .then(res => {
-        expect(res.body).toEqual({
-          _id: expect.anything(),
-          title: 'Climate Justice Alliance',
-          description: 'Movement building to pivot towards a just transition away from unsustainable energy',
-          imageUrl: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png',
-          __v: 0,
-          memberships: [{
-            _id: members[0].id,
-            organization: members[0].organization.id,
-            user: members[0].user.id,
-          },
-          {
-            _id: members[1].id,
-            organization: members[1].organization.id,
-            user: members[1].user.id,
-          }]
-        });
+    return agent
+      .post('/api/v1/auth/login')
+      .send([{ email: 'carla@carla.com', password: '0517' }, { email: 'sam@sam.com', password: '6789' }])
+      .then(() => {
+        return agent
+          .get(`/api/v1/organizations/${organization._id}`)
+          .then(res => {
+            expect(res.body).toEqual({
+              _id: expect.anything(),
+              title: 'Climate Justice Alliance',
+              description: 'Movement building to pivot towards a just transition away from unsustainable energy',
+              imageUrl: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png',
+              __v: 0,
+              memberships: [{
+                _id: members[0].id,
+                organization: members[0].organization.id,
+                user: members[0].user.id,
+              },
+              {
+                _id: members[1].id,
+                organization: members[1].organization.id,
+                user: members[1].user.id,
+              }]
+            });
+          });
       });
+
   });
 
   it('updates an organization by id via PATCH', () => {
@@ -136,7 +159,7 @@ describe('organization routes', () => {
       imageUrl: 'https://climatejusticealliance.org/wp-content/uploads/2019/10/CJA-logo_ESP_600px72dpi-1.png'
     })
       .then(organization => {
-        return request(app)
+        return agent
           .patch(`/api/v1/organizations/${organization._id}`)
           .send({ title: 'People Climate Movement' });
       })
@@ -172,7 +195,7 @@ describe('organization routes', () => {
     }
     ]);
 
-    return request(app)
+    return agent
       .delete(`/api/v1/organizations/${organization._id}`)
       .then(res => {
         expect(res.body).toEqual({
