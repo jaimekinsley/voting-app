@@ -6,7 +6,7 @@ const User = require('../lib/models/User');
 const Vote = require('../lib/models/Vote');
 
 
-module.exports = async({ memberships = 100, organizations = 75, polls = 200, users =  150, votes = 300 } = {}) => {
+module.exports = async({ memberships = 100, organizations = 75, polls = 200, users = 150, votes = 300 } = {}) => {
   const communicationMediums = ['phone', 'email'];
   const options = ['for', 'against'];
 
